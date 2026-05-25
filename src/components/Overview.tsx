@@ -14,14 +14,14 @@ export function Overview() {
       <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.35em] text-[var(--color-gold)]">
         12-Week Periodization
       </p>
-      <h2 className="mb-2 font-[family-name:var(--font-display)] text-3xl font-semibold text-[#f5f3ef] md:text-4xl">
+      <h2 className="mb-2 font-[family-name:var(--font-display)] text-2xl font-semibold text-[#f5f3ef] sm:text-3xl md:text-4xl">
         Training Architecture
       </h2>
-      <p className="mb-10 max-w-2xl text-[var(--color-muted)]">
+      <p className="mb-8 max-w-2xl text-sm leading-relaxed text-[var(--color-muted)] sm:mb-10 sm:text-base">
         Six sessions per week — strength, hypertrophy, engine, and recovery — structured across build, deload, strength, and test phases.
       </p>
 
-      <div className="mb-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="mb-10 grid grid-cols-1 gap-3 min-[400px]:grid-cols-2 sm:mb-12 lg:grid-cols-5">
         {phaseTimeline.map((block, i) => (
           <div
             key={block.weeks}
@@ -54,7 +54,7 @@ export function Overview() {
         </div>
       </div>
 
-      <div className="mt-12 rounded-2xl border border-[var(--color-border)] bg-gradient-to-br from-[var(--color-surface-card)] to-[var(--color-surface-raised)] p-6 md:p-8">
+      <div className="mt-10 rounded-2xl border border-[var(--color-border)] bg-gradient-to-br from-[var(--color-surface-card)] to-[var(--color-surface-raised)] p-5 sm:mt-12 sm:p-6 md:p-8">
         <h3 className="font-[family-name:var(--font-display)] text-xl text-[#f5f3ef]">{planTitle}</h3>
         <p className="mt-2 text-sm text-[var(--color-muted)]">{planSubtitle}</p>
         <p className="mt-4 text-xs text-[var(--color-muted)]">

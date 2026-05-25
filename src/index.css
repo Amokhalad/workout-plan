@@ -19,6 +19,7 @@
 
 html {
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -28,6 +29,7 @@ body {
   color: var(--color-text);
   min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 #root {
@@ -39,9 +41,68 @@ body {
   color: #fff;
 }
 
+/* iOS: 16px+ inputs avoid auto-zoom on focus */
 input,
-textarea {
+textarea,
+select {
   font-family: inherit;
+  font-size: 16px;
+}
+
+@media (min-width: 768px) {
+  input,
+  textarea,
+  select {
+    font-size: 14px;
+  }
+}
+
+/* Safe areas (notch / home indicator) */
+.safe-top {
+  padding-top: max(0px, env(safe-area-inset-top));
+}
+
+.safe-bottom {
+  padding-bottom: max(0px, env(safe-area-inset-bottom));
+}
+
+.safe-x {
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+/* Touch-friendly controls */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+[role='button'] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Week picker horizontal scroll */
+.week-scroll {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: max(1rem, env(safe-area-inset-left));
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.week-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.week-scroll > * {
+  scroll-snap-align: start;
 }
 
 .grain {
@@ -59,6 +120,12 @@ textarea {
   filter: blur(120px);
   pointer-events: none;
   z-index: 0;
+}
+
+@media (max-width: 767px) {
+  .glow-orb {
+    opacity: 0.5;
+  }
 }
 
 @keyframes fade-up {
@@ -80,3 +147,13 @@ textarea {
 .stagger-2 { animation-delay: 0.1s; }
 .stagger-3 { animation-delay: 0.15s; }
 .stagger-4 { animation-delay: 0.2s; }
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .animate-fade-up {
+    animation: none;
+  }
+}

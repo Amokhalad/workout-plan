@@ -7,7 +7,7 @@ import { planSubtitle, planTitle, workouts } from './data/workoutPlan'
 type View = 'overview' | 'workouts'
 
 function getCurrentWeek(): number {
-  const start = new Date(2025, 4, 24)
+  const start = new Date(2026, 4, 24)
   const now = new Date()
   const diff = Math.floor((now.getTime() - start.getTime()) / (7 * 24 * 60 * 60 * 1000))
   return Math.min(12, Math.max(1, diff + 1))

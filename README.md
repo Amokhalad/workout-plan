@@ -30,11 +30,30 @@ Deploy the `dist/` folder to Vercel, Netlify, or any static host.
 
 ## GitHub Pages
 
-Live URL: **https://bareq4601358-alj.github.io/workout-plan/**
+### Live site (use this exact link)
 
-1. Open [Repository Settings → Pages](https://github.com/bareq4601358-alj/workout-plan/settings/pages)
-2. Under **Build and deployment**, set **Source** to **Deploy from a branch**
-3. Branch: **gh-pages** · Folder: **/ (root)**
-4. Save — the site should appear within 1–3 minutes
+**https://bareq4601358-alj.github.io/workout-plan/**
 
-To redeploy after changes: `npm run build`, then push the `dist` contents to the `gh-pages` branch (or merge a PR that updates it).
+Do not open `https://bareq4601358-alj.github.io/` alone — that URL is empty (404). The app lives under `/workout-plan/`.
+
+### Settings ([Pages](https://github.com/bareq4601358-alj/workout-plan/settings/pages))
+
+| Setting | Correct value |
+|--------|----------------|
+| Source | **Deploy from a branch** (not GitHub Actions) |
+| Branch | **gh-pages** |
+| Folder | **/ (root)** — not `/docs` |
+
+After saving, wait 2–5 minutes, then click **Visit site** on that settings page.
+
+### Still blank?
+
+1. Hard refresh: `Cmd + Shift + R` (Mac) or `Ctrl + Shift + R` (Windows)
+2. Try an incognito/private window
+3. Confirm the address bar ends with `/workout-plan/`
+
+### Redeploy
+
+```bash
+./scripts/deploy-gh-pages.sh
+```

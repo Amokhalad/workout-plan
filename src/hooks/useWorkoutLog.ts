@@ -9,8 +9,8 @@ type LogStore = Record<string, LogEntry>
 
 const STORAGE_KEY = 'legendary-workout-log'
 
-function logKey(workoutId: string, week: number, exercise: string) {
-  return `${workoutId}:${week}:${exercise}`
+function logKey(workoutId: string, week: number, exerciseId: string) {
+  return `${workoutId}:${week}:${exerciseId}`
 }
 
 function load(): LogStore {
@@ -34,30 +34,40 @@ export function useWorkoutLog() {
   }, [store])
 
   const get = useCallback(
-    (workoutId: string, week: number, exercise: string): LogEntry => {
-      return store[logKey(workoutId, week, exercise)] ?? { actual: '', notes: '' }
+    (workoutId: string, week: number, exerciseId: string, legacyName?: string): LogEntry => {
+      const byId = store[logKey(workoutId, week, exerciseId)]
+      if (byId) return byId
+      if (legacyName) {
+        const byName = store[`${workoutId}:${week}:${legacyName}`]
+        if (byName) return byName
+      }
+      return { actual: '', notes: '' }
     },
     [store],
   )
 
   const set = useCallback(
-    (workoutId: string, week: number, exercise: string, field: keyof LogEntry, value: string) => {
-      const key = logKey(workoutId, week, exercise)
+    (workoutId: string, week: number, exerciseId: string, field: keyof LogEntry, value: string) => {
+      const key = logKey(workoutId, week, exerciseId)
       setStore((prev) => ({
         ...prev,
-        [key]: { ...prev[key], actual: prev[key]?.actual ?? '', notes: prev[key]?.notes ?? '', [field]: value },
+        [key]: {
+          actual: prev[key]?.actual ?? '',
+          notes: prev[key]?.notes ?? '',
+          [field]: value,
+        },
       }))
     },
     [],
   )
 
   const completionForWeek = useCallback(
-    (workoutId: string, week: number, exerciseNames: string[]) => {
-      const filled = exerciseNames.filter((name) => {
-        const e = store[logKey(workoutId, week, name)]
+    (workoutId: string, week: number, exerciseIds: string[]) => {
+      const filled = exerciseIds.filter((id) => {
+        const e = store[logKey(workoutId, week, id)]
         return e?.actual?.trim()
       }).length
-      return exerciseNames.length ? Math.round((filled / exerciseNames.length) * 100) : 0
+      return exerciseIds.length ? Math.round((filled / exerciseIds.length) * 100) : 0
     },
     [store],
   )

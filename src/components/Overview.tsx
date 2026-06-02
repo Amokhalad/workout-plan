@@ -1,4 +1,5 @@
-import { weekMeta, workouts, planSubtitle, planTitle } from '../data/workoutPlan'
+import { weekMeta } from '../data/workoutPlan'
+import { useApp } from '../context/AppContext'
 
 const phaseTimeline = [
   { weeks: '1–4', phase: 'Build' as const, desc: 'Learn rhythm, add reps & volume' },
@@ -9,6 +10,8 @@ const phaseTimeline = [
 ]
 
 export function Overview() {
+  const { plan, resetPlan } = useApp()
+
   return (
     <section className="animate-fade-up mb-16">
       <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.35em] text-[var(--color-gold)]">
@@ -18,15 +21,15 @@ export function Overview() {
         Training Architecture
       </h2>
       <p className="mb-8 max-w-2xl text-sm leading-relaxed text-[var(--color-muted)] sm:mb-10 sm:text-base">
-        Six sessions per week — strength, hypertrophy, engine, and recovery — structured across build, deload, strength, and test phases.
+        Six sessions per week — fully editable. Tap <strong className="font-medium text-[var(--color-text)]">Edit</strong> on any
+        workout to rename exercises, change targets, and set rest timers.
       </p>
 
       <div className="mb-10 grid grid-cols-1 gap-3 min-[400px]:grid-cols-2 sm:mb-12 lg:grid-cols-5">
-        {phaseTimeline.map((block, i) => (
+        {phaseTimeline.map((block) => (
           <div
             key={block.weeks}
-            className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-card)]/60 p-4 backdrop-blur-sm"
-            style={{ animationDelay: `${i * 0.05}s` }}
+            className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-card)]/60 p-4"
           >
             <p className="mb-2 font-mono text-xs text-[var(--color-gold)]">Wk {block.weeks}</p>
             <p className="mb-1 font-medium text-[#f5f3ef]">{block.phase}</p>
@@ -36,10 +39,10 @@ export function Overview() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {workouts.map((w) => (
+        {plan.workouts.map((w) => (
           <div
             key={w.id}
-            className="group rounded-2xl border border-[var(--color-border)] p-5 transition hover:border-opacity-50"
+            className="rounded-2xl border border-[var(--color-border)] p-5"
             style={{ borderLeftColor: w.accent, borderLeftWidth: 2 }}
           >
             <p className="mb-1 text-[10px] uppercase tracking-wider text-[var(--color-muted)]">{w.day}</p>
@@ -50,16 +53,22 @@ export function Overview() {
         <div className="rounded-2xl border border-dashed border-[var(--color-border)] p-5 opacity-70">
           <p className="mb-1 text-[10px] uppercase tracking-wider text-[var(--color-muted)]">Saturday</p>
           <h3 className="font-[family-name:var(--font-display)] text-lg text-[var(--color-muted)]">REST</h3>
-          <p className="mt-1 text-xs text-[var(--color-muted)]">Non-negotiable recovery</p>
         </div>
       </div>
 
       <div className="mt-10 rounded-2xl border border-[var(--color-border)] bg-gradient-to-br from-[var(--color-surface-card)] to-[var(--color-surface-raised)] p-5 sm:mt-12 sm:p-6 md:p-8">
-        <h3 className="font-[family-name:var(--font-display)] text-xl text-[#f5f3ef]">{planTitle}</h3>
-        <p className="mt-2 text-sm text-[var(--color-muted)]">{planSubtitle}</p>
+        <h3 className="font-[family-name:var(--font-display)] text-xl text-[#f5f3ef]">{plan.title}</h3>
+        <p className="mt-2 text-sm text-[var(--color-muted)]">{plan.subtitle}</p>
         <p className="mt-4 text-xs text-[var(--color-muted)]">
-          Starts {weekMeta[0].dates.upperStrength} · Ends {weekMeta[11].dates.rest}
+          {weekMeta[0].dates.upperStrength} → {weekMeta[11].dates.rest}
         </p>
+        <button
+          type="button"
+          onClick={resetPlan}
+          className="touch-target mt-6 rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-xs font-medium text-[var(--color-muted)] transition hover:border-[var(--color-gold)]/40 hover:text-[var(--color-text)]"
+        >
+          Reset plan to defaults
+        </button>
       </div>
     </section>
   )

@@ -1,9 +1,9 @@
 import { useState } from 'react'
+import { useApp } from './context/AppContext'
 import { MobileNav } from './components/MobileNav'
 import { Overview } from './components/Overview'
 import { RestCard, WorkoutCard } from './components/WorkoutCard'
 import { WeekSelector } from './components/WeekSelector'
-import { planSubtitle, planTitle, workouts } from './data/workoutPlan'
 
 type View = 'overview' | 'workouts'
 
@@ -15,6 +15,7 @@ function getCurrentWeek(): number {
 }
 
 export default function App() {
+  const { plan } = useApp()
   const [view, setView] = useState<View>('workouts')
   const [week, setWeek] = useState(getCurrentWeek)
   const [expanded, setExpanded] = useState<string | null>('upper-strength')
@@ -31,10 +32,10 @@ export default function App() {
         <div className="safe-x mx-auto flex max-w-4xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-5 md:px-8">
           <div className="min-w-0">
             <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[var(--color-gold)] sm:tracking-[0.4em]">
-              Premium Training
+              Your training plan
             </p>
             <h1 className="truncate font-[family-name:var(--font-display)] text-xl font-semibold tracking-tight text-[#f5f3ef] sm:text-2xl md:text-3xl">
-              {planTitle}
+              {plan.title}
             </h1>
           </div>
           <nav
@@ -65,12 +66,12 @@ export default function App() {
         ) : (
           <>
             <section className="animate-fade-up mb-8 sm:mb-12">
-              <p className="mb-4 text-sm leading-relaxed text-[var(--color-muted)]">{planSubtitle}</p>
+              <p className="mb-4 text-sm leading-relaxed text-[var(--color-muted)]">{plan.subtitle}</p>
               <WeekSelector week={week} onChange={setWeek} />
             </section>
 
             <section className="space-y-3 sm:space-y-4">
-              {workouts.map((w, i) => (
+              {plan.workouts.map((w, i) => (
                 <div key={w.id} className={`stagger-${Math.min(i + 1, 4)}`}>
                   <WorkoutCard
                     workout={w}
@@ -87,7 +88,7 @@ export default function App() {
       </main>
 
       <footer className="safe-bottom relative z-10 hidden border-t border-[var(--color-border)] py-8 text-center text-xs text-[var(--color-muted)] md:block">
-        Logged locally in your browser · Syncs with your spreadsheet workflow
+        Saved on this device · Fully customizable
       </footer>
 
       <MobileNav view={view} onChange={setView} />

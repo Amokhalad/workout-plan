@@ -31,19 +31,19 @@ Deploy the `dist/` folder to Vercel, Netlify, or any static host.
 
 ### Live site (use this exact link)
 
-**https://bareq4601358-alj.github.io/workout-plan/**
+**https://amokhalad.github.io/workout-plan/**
 
-Do not open `https://bareq4601358-alj.github.io/` alone — that URL is empty (404). The app lives under `/workout-plan/`.
+Do not open `https://amokhalad.github.io/` alone — that URL is empty (404). The app lives under `/workout-plan/`.
 
-### Settings ([Pages](https://github.com/bareq4601358-alj/workout-plan/settings/pages))
+### Settings ([Pages](https://github.com/Amokhalad/workout-plan/settings/pages))
 
 | Setting | Correct value |
 |--------|----------------|
-| Source | **Deploy from a branch** (not GitHub Actions) |
+| Source | **Deploy from a branch** |
 | Branch | **gh-pages** |
 | Folder | **/ (root)** — not `/docs` |
 
-After saving, wait 2–5 minutes, then click **Visit site** on that settings page.
+The site is served from the `gh-pages` branch, which the deploy script builds and force-pushes.
 
 ### Still blank?
 
@@ -54,5 +54,5 @@ After saving, wait 2–5 minutes, then click **Visit site** on that settings pag
 ### Redeploy
 
 ```bash
-./scripts/deploy-gh-pages.sh
+npm run deploy:pages
 ```

@@ -7,7 +7,6 @@ Premium web app for your 12-week **Strong Body, Strong Mind** training program (
 - **12-week periodization** — Build, Deload, Strength, Power + Test phases
 - **6 training days** + REST — all exercises with weekly targets from your spreadsheet
 - **Workout logging** — Actual sets & notes saved in your browser (localStorage)
-- **Week 1 seed data** — Bench press logs from your sheet pre-filled
 - **Overview dashboard** — Training architecture at a glance
 
 ## Run locally

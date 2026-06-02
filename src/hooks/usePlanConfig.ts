@@ -55,11 +55,6 @@ export function usePlanConfig() {
     setPlan((prev) => fn(prev))
   }, [])
 
-  const getWorkout = useCallback(
-    (workoutId: string) => plan.workouts.find((w) => w.id === workoutId),
-    [plan.workouts],
-  )
-
   const updateWorkout = useCallback((workoutId: string, patch: Partial<Pick<PlanWorkout, 'title' | 'subtitle' | 'day' | 'accent'>>) => {
     updatePlan((p) => ({
       ...p,
@@ -247,7 +242,6 @@ export function usePlanConfig() {
 
   return {
     plan,
-    getWorkout,
     getPlannedDate,
     getPlannedLabel,
     setStartDate,

@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { restDay } from '../data/workoutPlan'
 import type { PlanWorkout } from '../types/plan'
 import { useApp } from '../context/AppContext'
-import { useSessions } from '../hooks/useSessions'
 import { ExerciseCard } from './ExerciseCard'
 import { WorkoutEditor } from './WorkoutEditor'
 
@@ -14,10 +13,9 @@ interface WorkoutCardProps {
 }
 
 export function WorkoutCard({ workout, week, expanded, onToggle }: WorkoutCardProps) {
-  const session = useSessions().get(workout, week)
+  const { getPlannedLabel } = useApp()
   const [editing, setEditing] = useState(false)
   const articleRef = useRef<HTMLElement>(null)
-  const completion = session.completion
   const weekIdx = week - 1
 
   useEffect(() => {
@@ -49,7 +47,7 @@ export function WorkoutCard({ workout, week, expanded, onToggle }: WorkoutCardPr
                   {workout.day}
                 </span>
                 <span className="hidden text-[10px] text-[var(--color-muted)] sm:inline">·</span>
-                <span className="text-xs font-medium text-[var(--color-gold-dim)]">{session.plannedLabel}</span>
+                <span className="text-xs font-medium text-[var(--color-gold-dim)]">{getPlannedLabel(workout.id, week)}</span>
               </div>
               <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold leading-tight text-[var(--color-heading)] sm:text-xl">
                 {workout.title}
@@ -59,16 +57,13 @@ export function WorkoutCard({ workout, week, expanded, onToggle }: WorkoutCardPr
                 {workout.exercises.length} exercises
               </p>
             </div>
-            <div className="flex shrink-0 flex-col items-center gap-1 pt-0.5">
-              <CompletionRing percent={completion} color={workout.accent} />
-              <span
-                className="text-lg leading-none text-[var(--color-muted)] transition-transform duration-200"
-                style={{ transform: expanded ? 'rotate(180deg)' : 'none' }}
-                aria-hidden
-              >
-                ▾
-              </span>
-            </div>
+            <span
+              className="shrink-0 pt-0.5 text-lg leading-none text-[var(--color-muted)] transition-transform duration-200"
+              style={{ transform: expanded ? 'rotate(180deg)' : 'none' }}
+              aria-hidden
+            >
+              ▾
+            </span>
           </button>
 
           <button
@@ -88,7 +83,7 @@ export function WorkoutCard({ workout, week, expanded, onToggle }: WorkoutCardPr
         {expanded && (
           <div className="border-t border-[var(--color-border)] px-3 pb-5 pt-3 sm:px-5 sm:pb-6">
             <p className="mb-3 text-center text-[10px] text-[var(--color-muted)] sm:hidden">
-              {workout.exercises.length} exercises · scroll to log & rest timers
+              {workout.exercises.length} exercises · edit targets, rest & notes
             </p>
             <div className="space-y-3">
               {workout.exercises.map((ex) => (
@@ -119,35 +114,6 @@ export function WorkoutCard({ workout, week, expanded, onToggle }: WorkoutCardPr
 
       {editing && <WorkoutEditor workout={workout} week={week} onClose={() => setEditing(false)} />}
     </>
-  )
-}
-
-function CompletionRing({ percent, color }: { percent: number; color: string }) {
-  const r = 18
-  const c = 2 * Math.PI * r
-  const offset = c - (percent / 100) * c
-
-  return (
-    <div className="relative h-12 w-12 sm:h-11 sm:w-11" aria-label={`${percent}% logged`}>
-      <svg className="h-full w-full -rotate-90" viewBox="0 0 44 44">
-        <circle cx="22" cy="22" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3" />
-        <circle
-          cx="22"
-          cy="22"
-          r={r}
-          fill="none"
-          stroke={color}
-          strokeWidth="3"
-          strokeDasharray={c}
-          strokeDashoffset={offset}
-          strokeLinecap="round"
-          className="transition-all duration-500"
-        />
-      </svg>
-      <span className="absolute inset-0 flex items-center justify-center text-[10px] font-semibold text-[var(--color-muted)]">
-        {percent}%
-      </span>
-    </div>
   )
 }
 

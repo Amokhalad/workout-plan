@@ -1,8 +1,16 @@
-import { useState } from 'react'
+import { useRef, useState, type KeyboardEvent } from 'react'
 import type { PlanExercise } from '../../types/plan'
 import { useApp } from '../../context/AppContext'
 import { parseTarget } from '../../utils/parseTarget'
 import { RestTimer } from '../RestTimer'
+
+/** A logged set must read as weight x reps, e.g. "125 x 5". */
+const WEIGHT_REPS_RE = /^\d+(?:\.\d+)?\s*[x×]\s*\d+$/i
+
+/** Normalizes the weight x reps separator to " x " as the user types (e.g. "125x5" -> "125 x 5", "125x" -> "125 x "). */
+function formatSetActual(value: string): string {
+  return value.replace(/^\s*(\d+(?:\.\d+)?)\s*[x×]\s*/i, '$1 x ')
+}
 
 interface TrainExerciseProps {
   workoutId: string
@@ -19,6 +27,7 @@ export function TrainExercise({ workoutId, week, exercise, accent, disabled = fa
   const rawTarget = exercise.targets[week - 1] ?? exercise.targets[0] ?? ''
   const parsed = parseTarget(rawTarget)
   const prescribed = parsed.kind === 'single' ? 1 : parsed.count
+  const requireWeightReps = parsed.kind === 'sets'
 
   const sets = getSets(workoutId, week, exercise.id, prescribed)
   const doneCount = sets.filter((s) => s.done).length
@@ -29,10 +38,34 @@ export function TrainExercise({ workoutId, week, exercise, accent, disabled = fa
 
   const [restSignal, setRestSignal] = useState(0)
   const [open, setOpen] = useState(true)
+  const [resting, setResting] = useState(false)
+  const [errorRows, setErrorRows] = useState<Set<number>>(() => new Set())
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+
+  // Highlight the card only while the rest timer is actively counting down (and the card is open).
+  const isActive = resting && open
+
+  const isInvalidActual = (value: string) =>
+    requireWeightReps && value.trim() !== '' && !WEIGHT_REPS_RE.test(value.trim())
+
+  const setRowError = (index: number, hasError: boolean) =>
+    setErrorRows((prev) => {
+      if (hasError === prev.has(index)) return prev
+      const next = new Set(prev)
+      if (hasError) next.add(index)
+      else next.delete(index)
+      return next
+    })
 
   const handleToggle = (index: number) => {
     if (disabled) return
     const willComplete = !sets[index]?.done
+    if (willComplete && isInvalidActual(sets[index]?.actual ?? '')) {
+      setRowError(index, true)
+      inputRefs.current[index]?.focus()
+      return
+    }
+    setRowError(index, false)
     toggleSet(workoutId, week, exercise.id, index, prescribed)
     if (willComplete) {
       setRestSignal((s) => s + 1)
@@ -43,14 +76,33 @@ export function TrainExercise({ workoutId, week, exercise, accent, disabled = fa
     }
   }
 
-  const handleActualChange = (index: number, value: string) => {
+  const handleActualChange = (index: number, raw: string, el: HTMLInputElement) => {
     if (disabled) return
+    const value = requireWeightReps ? formatSetActual(raw) : raw
     setSetActual(workoutId, week, exercise.id, index, value, prescribed)
-    // Logging a set's weight x reps means you did it: auto-complete it (and start rest).
+    // Keep the caret at the end whenever auto-formatting rewrote the value.
+    if (value !== raw) {
+      requestAnimationFrame(() => el.setSelectionRange(el.value.length, el.value.length))
+    }
+    setRowError(index, false) // editing clears any error; it's re-checked on a done attempt
+    // Logging a valid weight x reps means you did it: auto-complete it (and start rest).
     // Deliberately does NOT collapse the exercise, so you can keep typing into the last set.
-    if (value.trim() && !sets[index]?.done) {
+    const valid = !requireWeightReps || WEIGHT_REPS_RE.test(value.trim())
+    if (valid && value.trim() && !sets[index]?.done) {
       toggleSet(workoutId, week, exercise.id, index, prescribed)
       setRestSignal((s) => s + 1)
+    }
+  }
+
+  // Tab / Shift+Tab jumps straight between the weight x reps inputs, skipping the checkboxes between them.
+  const handleInputKeyDown = (e: KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (e.key !== 'Tab' || e.metaKey || e.ctrlKey || e.altKey) return
+    const target = index + (e.shiftKey ? -1 : 1)
+    const next = target >= 0 && target < sets.length ? inputRefs.current[target] : null
+    if (next) {
+      e.preventDefault()
+      next.focus()
+      next.select()
     }
   }
 
@@ -61,8 +113,14 @@ export function TrainExercise({ workoutId, week, exercise, accent, disabled = fa
 
   return (
     <article
-      className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-card)]/80 backdrop-blur-sm"
-      style={{ borderLeftColor: allDone ? accent : 'var(--color-border)', borderLeftWidth: 3 }}
+      className="overflow-hidden rounded-2xl border bg-[var(--color-surface-card)]/80 backdrop-blur-sm"
+      style={{
+        borderColor: isActive ? accent : 'var(--color-border)',
+        borderLeftColor: isActive || allDone ? accent : 'var(--color-border)',
+        borderLeftWidth: 3,
+        boxShadow: isActive ? `0 0 0 1px ${accent}55, 0 12px 32px -14px ${accent}` : undefined,
+        transition: 'box-shadow 0.3s ease, border-color 0.3s ease',
+      }}
     >
       <button
         type="button"
@@ -75,6 +133,15 @@ export function TrainExercise({ workoutId, week, exercise, accent, disabled = fa
           <p className="mt-0.5 font-mono text-xs text-[var(--color-muted)]">{rawTarget || 'No target set'}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          {isActive && (
+            <span
+              className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider"
+              style={{ color: accent }}
+            >
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full" style={{ background: accent }} aria-hidden />
+              Resting
+            </span>
+          )}
           <span
             className="text-xs font-semibold tabular-nums"
             style={{ color: allDone ? accent : 'var(--color-muted)' }}
@@ -96,63 +163,79 @@ export function TrainExercise({ workoutId, week, exercise, accent, disabled = fa
           <div className="space-y-2">
             {sets.map((s, i) => {
               const isExtra = i >= prescribed
+              const hasError = errorRows.has(i)
               return (
-                <div key={i} className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => handleToggle(i)}
-                    disabled={disabled}
-                    aria-pressed={s.done}
-                    aria-label={`${rowNoun} ${i + 1} ${s.done ? 'done' : 'not done'}`}
-                    className="touch-target flex h-11 min-w-0 flex-1 items-center gap-3 rounded-xl border px-3 text-left transition active:scale-[0.99] disabled:cursor-not-allowed"
-                    style={{
-                      borderColor: s.done ? accent : 'var(--color-border)',
-                      background: s.done ? `${accent}1a` : 'var(--color-surface-raised)',
-                    }}
-                  >
-                    <span
-                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-bold"
-                      style={{
-                        borderColor: s.done ? accent : 'var(--color-border)',
-                        background: s.done ? accent : 'transparent',
-                        color: s.done ? '#0c0c0e' : 'var(--color-muted)',
-                      }}
-                      aria-hidden
-                    >
-                      {s.done ? '✓' : i + 1}
-                    </span>
-                    <span className="min-w-0 truncate">
-                      <span className="text-sm font-medium text-[var(--color-text)]">
-                        {parsed.kind === 'single' ? (parsed.label || 'Mark complete') : `${rowNoun} ${i + 1}`}
-                      </span>
-                      {showReps && (
-                        <span className="ml-2 font-mono text-xs text-[var(--color-muted)]">{parsed.reps}</span>
-                      )}
-                    </span>
-                  </button>
-
-                  {showActual && (
-                    <input
-                      type="text"
-                      inputMode="text"
-                      value={s.actual}
-                      placeholder="135x5"
-                      disabled={disabled}
-                      onChange={(e) => handleActualChange(i, e.target.value)}
-                      className="field-input h-11 w-24 shrink-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text)] outline-none focus:border-[var(--color-gold)] disabled:cursor-not-allowed disabled:opacity-50"
-                    />
-                  )}
-
-                  {isExtra && (
+                <div key={i} className="space-y-1">
+                  <div className="flex items-center gap-3">
                     <button
                       type="button"
-                      onClick={() => removeSet(workoutId, week, exercise.id, i)}
+                      onClick={() => handleToggle(i)}
                       disabled={disabled}
-                      aria-label={`Remove ${rowNoun.toLowerCase()} ${i + 1}`}
-                      className="touch-target flex h-11 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--color-border)] text-sm text-[var(--color-muted)] disabled:cursor-not-allowed disabled:opacity-40"
+                      aria-pressed={s.done}
+                      aria-label={`${rowNoun} ${i + 1} ${s.done ? 'done' : 'not done'}`}
+                      className="touch-target flex h-11 min-w-0 flex-1 items-center gap-3 rounded-xl border px-3 text-left transition active:scale-[0.99] disabled:cursor-not-allowed"
+                      style={{
+                        borderColor: hasError ? '#d98c7a' : s.done ? accent : 'var(--color-border)',
+                        background: hasError ? '#d98c7a14' : s.done ? `${accent}1a` : 'var(--color-surface-raised)',
+                      }}
                     >
-                      ✕
+                      <span
+                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-bold"
+                        style={{
+                          borderColor: s.done ? accent : 'var(--color-border)',
+                          background: s.done ? accent : 'transparent',
+                          color: s.done ? '#0c0c0e' : 'var(--color-muted)',
+                        }}
+                        aria-hidden
+                      >
+                        {s.done ? '✓' : i + 1}
+                      </span>
+                      <span className="min-w-0 truncate">
+                        <span className="text-sm font-medium text-[var(--color-text)]">
+                          {parsed.kind === 'single' ? (parsed.label || 'Mark complete') : `${rowNoun} ${i + 1}`}
+                        </span>
+                        {showReps && (
+                          <span className="ml-2 font-mono text-xs text-[var(--color-muted)]">{parsed.reps}</span>
+                        )}
+                      </span>
                     </button>
+
+                    {showActual && (
+                      <input
+                        ref={(el) => {
+                          inputRefs.current[i] = el
+                        }}
+                        type="text"
+                        inputMode="text"
+                        value={s.actual}
+                        placeholder={requireWeightReps ? '125 x 5' : 'log result'}
+                        disabled={disabled}
+                        aria-invalid={hasError}
+                        aria-label={`${rowNoun} ${i + 1} weight and reps`}
+                        onChange={(e) => handleActualChange(i, e.target.value, e.currentTarget)}
+                        onKeyDown={(e) => handleInputKeyDown(e, i)}
+                        className={`field-input h-11 w-24 shrink-0 rounded-xl border bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text)] outline-none disabled:cursor-not-allowed disabled:opacity-50 ${
+                          hasError ? 'border-[#d98c7a] focus:border-[#d98c7a]' : 'border-[var(--color-border)] focus:border-[var(--color-gold)]'
+                        }`}
+                      />
+                    )}
+
+                    {isExtra && (
+                      <button
+                        type="button"
+                        onClick={() => removeSet(workoutId, week, exercise.id, i)}
+                        disabled={disabled}
+                        aria-label={`Remove ${rowNoun.toLowerCase()} ${i + 1}`}
+                        className="touch-target flex h-11 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--color-border)] text-sm text-[var(--color-muted)] disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                  {hasError && (
+                    <p className="pl-1 text-[11px]" style={{ color: '#d98c7a' }}>
+                      Enter weight × reps, e.g. <span className="font-mono">125 x 5</span>
+                    </p>
                   )}
                 </div>
               )
@@ -174,6 +257,7 @@ export function TrainExercise({ workoutId, week, exercise, accent, disabled = fa
               restSeconds={exercise.restSeconds}
               accent={accent}
               startSignal={restSignal}
+              onRunningChange={setResting}
               onRestChange={(seconds) => updateExercise(workoutId, exercise.id, { restSeconds: seconds })}
             />
           </div>

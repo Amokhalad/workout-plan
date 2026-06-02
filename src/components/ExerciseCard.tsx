@@ -17,12 +17,11 @@ export function ExerciseCard({ workoutId, week, exercise, accent }: ExerciseCard
 
   return (
     <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-raised)]/40 p-3 sm:p-4">
-      <h4 className="mb-3 text-base font-medium leading-snug text-[#f5f3ef]">{exercise.name}</h4>
+      <h4 className="mb-3 pr-1 text-base font-medium leading-snug text-[#f5f3ef]">{exercise.name}</h4>
 
       <label className="mb-3 block">
-        <span className="mb-1.5 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-muted)]">
+        <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-[var(--color-muted)]">
           Target
-          <span className="font-normal normal-case tracking-normal text-[var(--color-gold-dim)]">tap to edit</span>
         </span>
         <input
           type="text"
@@ -34,7 +33,7 @@ export function ExerciseCard({ workoutId, week, exercise, accent }: ExerciseCard
             })
           }
           placeholder="e.g. 4 x 5–8"
-          className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2.5 font-mono text-sm outline-none transition focus:border-[var(--color-gold)] focus:ring-2 focus:ring-[var(--color-gold)]/20"
+          className="field-input w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 font-mono outline-none focus:border-[var(--color-gold)] focus:ring-2 focus:ring-[var(--color-gold)]/20"
           style={{ color: accent }}
         />
       </label>
@@ -47,10 +46,11 @@ export function ExerciseCard({ workoutId, week, exercise, accent }: ExerciseCard
           <input
             type="text"
             inputMode="text"
+            enterKeyHint="next"
             value={log.actual}
-            placeholder="Log sets, weight, reps…"
+            placeholder="135×5, 145×3…"
             onChange={(e) => set(workoutId, week, exercise.id, 'actual', e.target.value)}
-            className="min-h-12 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-[var(--color-text)] outline-none transition focus:border-[var(--color-gold)] focus:ring-2 focus:ring-[var(--color-gold)]/20 md:min-h-0 md:py-2.5 md:text-sm"
+            className="field-input w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-[var(--color-text)] outline-none focus:border-[var(--color-gold)] focus:ring-2 focus:ring-[var(--color-gold)]/20"
           />
         </label>
         <label className="block">
@@ -62,7 +62,7 @@ export function ExerciseCard({ workoutId, week, exercise, accent }: ExerciseCard
             placeholder="How did it feel?"
             rows={2}
             onChange={(e) => set(workoutId, week, exercise.id, 'notes', e.target.value)}
-            className="w-full resize-y rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-[var(--color-text)] outline-none transition focus:border-[var(--color-gold)] focus:ring-2 focus:ring-[var(--color-gold)]/20 md:py-2.5 md:text-sm"
+            className="field-input min-h-[4.5rem] w-full resize-y rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-[var(--color-text)] outline-none focus:border-[var(--color-gold)] focus:ring-2 focus:ring-[var(--color-gold)]/20"
           />
         </label>
       </div>

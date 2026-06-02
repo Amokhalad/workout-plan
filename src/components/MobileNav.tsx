@@ -8,7 +8,7 @@ interface MobileNavProps {
 export function MobileNav({ view, onChange }: MobileNavProps) {
   return (
     <nav
-      className="safe-bottom safe-x fixed inset-x-0 bottom-0 z-30 border-t border-[var(--color-border)] bg-[var(--color-surface)]/95 backdrop-blur-lg md:hidden"
+      className="mobile-nav safe-bottom safe-x fixed inset-x-0 bottom-0 z-30 border-t border-[var(--color-border)] bg-[var(--color-surface)]/95 backdrop-blur-lg md:hidden"
       aria-label="Main navigation"
     >
       <div className="mx-auto flex max-w-4xl gap-2 p-2">

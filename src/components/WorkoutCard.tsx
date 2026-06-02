@@ -25,7 +25,7 @@ export function WorkoutCard({ workout, week, expanded, onToggle }: WorkoutCardPr
     if (expanded && articleRef.current) {
       const t = window.setTimeout(() => {
         articleRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }, 100)
+      }, 150)
       return () => window.clearTimeout(t)
     }
   }, [expanded])
@@ -34,10 +34,10 @@ export function WorkoutCard({ workout, week, expanded, onToggle }: WorkoutCardPr
     <>
       <article
         ref={articleRef}
-        className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-card)]/80 backdrop-blur-md scroll-mt-24"
+        className="card-scroll-margin overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-card)]/80 backdrop-blur-md"
         style={{ borderLeftColor: workout.accent, borderLeftWidth: 3 }}
       >
-        <div className="flex items-stretch">
+        <div className="flex flex-col sm:flex-row sm:items-stretch">
           <button
             type="button"
             onClick={onToggle}
@@ -49,15 +49,15 @@ export function WorkoutCard({ workout, week, expanded, onToggle }: WorkoutCardPr
                 <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--color-muted)]">
                   {workout.day}
                 </span>
-                <span className="text-[10px] text-[var(--color-muted)]">·</span>
+                <span className="hidden text-[10px] text-[var(--color-muted)] sm:inline">·</span>
                 <span className="text-xs text-[var(--color-gold-dim)]">{date}</span>
               </div>
               <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold leading-tight text-[#f5f3ef] sm:text-xl">
                 {workout.title}
               </h3>
-              <p className="mt-1 text-sm text-[var(--color-muted)]">{workout.subtitle}</p>
-              <p className="mt-2 text-xs text-[var(--color-muted)]">
-                {workout.exercises.length} exercises · tap customize to edit plan
+              <p className="mt-1 line-clamp-2 text-sm text-[var(--color-muted)]">{workout.subtitle}</p>
+              <p className="mt-2 hidden text-xs text-[var(--color-muted)] sm:block">
+                {workout.exercises.length} exercises
               </p>
             </div>
             <div className="flex shrink-0 flex-col items-center gap-1 pt-0.5">
@@ -71,18 +71,26 @@ export function WorkoutCard({ workout, week, expanded, onToggle }: WorkoutCardPr
               </span>
             </div>
           </button>
+
           <button
             type="button"
-            onClick={() => setEditing(true)}
-            className="touch-target shrink-0 border-l border-[var(--color-border)] px-4 text-xs font-semibold uppercase tracking-wider text-[var(--color-gold)] transition active:bg-white/[0.03] sm:px-5"
+            onClick={(e) => {
+              e.stopPropagation()
+              setEditing(true)
+            }}
+            className="touch-target w-full border-t border-[var(--color-border)] py-3.5 text-sm font-semibold text-[var(--color-gold)] transition active:bg-white/[0.03] sm:w-auto sm:border-t-0 sm:border-l sm:px-5 sm:py-0"
             aria-label={`Customize ${workout.title}`}
           >
-            Edit
+            <span className="sm:hidden">Customize workout</span>
+            <span className="hidden sm:inline">Edit</span>
           </button>
         </div>
 
         {expanded && (
-          <div className="border-t border-[var(--color-border)] px-4 pb-5 pt-3 sm:px-5 sm:pb-6">
+          <div className="border-t border-[var(--color-border)] px-3 pb-5 pt-3 sm:px-5 sm:pb-6">
+            <p className="mb-3 text-center text-[10px] text-[var(--color-muted)] sm:hidden">
+              {workout.exercises.length} exercises · scroll to log & rest timers
+            </p>
             <div className="space-y-3">
               {workout.exercises.map((ex) => (
                 <ExerciseCard
@@ -97,12 +105,12 @@ export function WorkoutCard({ workout, week, expanded, onToggle }: WorkoutCardPr
               {workout.footers.map((item) => (
                 <div
                   key={item.id}
-                  className="flex flex-col gap-1 rounded-xl border border-dashed border-[var(--color-border)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                  className="flex flex-col gap-1 rounded-xl border border-dashed border-[var(--color-border)] px-4 py-3"
                 >
                   <span className="text-xs font-semibold uppercase tracking-wider text-[var(--color-gold-dim)]">
                     {item.label}
                   </span>
-                  <span className="text-sm text-[var(--color-text)]">{item.targets[weekIdx] ?? ''}</span>
+                  <span className="text-sm leading-snug text-[var(--color-text)]">{item.targets[weekIdx] ?? ''}</span>
                 </div>
               ))}
             </div>
@@ -152,7 +160,7 @@ export function RestCard({ week, expanded, onToggle }: { week: number; expanded:
     if (expanded && articleRef.current) {
       const t = window.setTimeout(() => {
         articleRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }, 100)
+      }, 150)
       return () => window.clearTimeout(t)
     }
   }, [expanded])
@@ -160,21 +168,21 @@ export function RestCard({ week, expanded, onToggle }: { week: number; expanded:
   return (
     <article
       ref={articleRef}
-      className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-raised)]/40 scroll-mt-24"
+      className="card-scroll-margin overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-raised)]/40"
     >
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={expanded}
-        className="touch-target flex w-full items-center justify-between gap-3 p-4 text-left sm:p-5"
+        className="touch-target flex w-full items-center justify-between gap-3 p-4 text-left active:bg-white/[0.02] sm:p-5"
       >
         <div className="min-w-0">
-          <div className="mb-1 flex flex-wrap items-center gap-x-2">
+          <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--color-muted)]">{restDay.day}</span>
             <span className="text-xs text-[var(--color-gold-dim)]">{date}</span>
           </div>
           <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold text-[var(--color-muted)]">{restDay.title}</h3>
-          <p className="mt-1 text-sm text-[var(--color-muted)]/80">{restDay.subtitle}</p>
+          <p className="mt-1 text-sm leading-snug text-[var(--color-muted)]/80">{restDay.subtitle}</p>
         </div>
         <span className="shrink-0 text-2xl opacity-40" aria-hidden>
           ◎

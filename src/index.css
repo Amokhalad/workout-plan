@@ -105,6 +105,71 @@ button,
   scroll-snap-align: start;
 }
 
+/* Horizontal preset chips (rest timer, editor) */
+.preset-scroll {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+
+.preset-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.preset-scroll > * {
+  scroll-snap-align: center;
+}
+
+/* Scroll margin for fixed header + bottom nav */
+.card-scroll-margin {
+  scroll-margin-top: 5.5rem;
+  scroll-margin-bottom: 6.5rem;
+}
+
+@media (min-width: 768px) {
+  .card-scroll-margin {
+    scroll-margin-top: 6rem;
+    scroll-margin-bottom: 2rem;
+  }
+}
+
+/* Main content clears bottom tab bar */
+.main-pad-bottom {
+  padding-bottom: calc(6.75rem + env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 768px) {
+  .main-pad-bottom {
+    padding-bottom: 3.5rem;
+  }
+}
+
+body.modal-open .mobile-nav {
+  display: none;
+}
+
+.sheet-scroll {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+
+.field-input {
+  font-size: 16px;
+  min-height: 3rem;
+}
+
+@media (min-width: 768px) {
+  .field-input {
+    font-size: 14px;
+    min-height: 2.5rem;
+  }
+}
+
 .grain {
   pointer-events: none;
   position: fixed;

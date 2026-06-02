@@ -60,7 +60,7 @@ export default function App() {
         </div>
       </header>
 
-      <main className="relative z-10 mx-auto max-w-4xl px-4 py-6 pb-28 sm:px-6 sm:py-10 md:px-8 md:py-14 md:pb-14">
+      <main className="main-pad-bottom relative z-10 mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10 md:px-8 md:py-14">
         {view === 'overview' ? (
           <Overview />
         ) : (

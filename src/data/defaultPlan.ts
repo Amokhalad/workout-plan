@@ -1,6 +1,8 @@
 import type { PlanExercise, PlanWorkout, TrainingPlan } from '../types/plan'
-import { buildDefaultWeekDates } from './defaultWeekDates'
 import { workouts as templates, planTitle, planSubtitle } from './workoutPlan'
+
+/** Week 1 Sunday (Upper Strength) of the seed program. */
+export const DEFAULT_START_DATE = '2026-05-24'
 
 export const REST_PRESETS = [30, 45, 60, 90, 120, 180] as const
 
@@ -71,11 +73,12 @@ export function buildDefaultPlan(): TrainingPlan {
   }))
 
   return {
-    version: 2,
+    version: 3,
     title: planTitle,
     subtitle: planSubtitle,
     workouts: planWorkouts,
-    weekDates: buildDefaultWeekDates(),
+    startDate: DEFAULT_START_DATE,
+    weekShiftDays: {},
   }
 }
 

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { restDay } from '../data/workoutPlan'
 import type { PlanWorkout } from '../types/plan'
 import { useApp } from '../context/AppContext'
-import { EditableDate } from './EditableDate'
+import { useSessions } from '../hooks/useSessions'
 import { ExerciseCard } from './ExerciseCard'
 import { WorkoutEditor } from './WorkoutEditor'
 
@@ -14,11 +14,10 @@ interface WorkoutCardProps {
 }
 
 export function WorkoutCard({ workout, week, expanded, onToggle }: WorkoutCardProps) {
-  const { completionForWeek } = useApp()
+  const session = useSessions().get(workout, week)
   const [editing, setEditing] = useState(false)
   const articleRef = useRef<HTMLElement>(null)
-  const exerciseIds = workout.exercises.map((e) => e.id)
-  const completion = completionForWeek(workout.id, week, exerciseIds)
+  const completion = session.completion
   const weekIdx = week - 1
 
   useEffect(() => {
@@ -50,9 +49,9 @@ export function WorkoutCard({ workout, week, expanded, onToggle }: WorkoutCardPr
                   {workout.day}
                 </span>
                 <span className="hidden text-[10px] text-[var(--color-muted)] sm:inline">·</span>
-                <EditableDate workoutId={workout.id} week={week} />
+                <span className="text-xs font-medium text-[var(--color-gold-dim)]">{session.plannedLabel}</span>
               </div>
-              <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold leading-tight text-[#f5f3ef] sm:text-xl">
+              <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold leading-tight text-[var(--color-heading)] sm:text-xl">
                 {workout.title}
               </h3>
               <p className="mt-1 line-clamp-2 text-sm text-[var(--color-muted)]">{workout.subtitle}</p>
@@ -153,6 +152,7 @@ function CompletionRing({ percent, color }: { percent: number; color: string }) 
 }
 
 export function RestCard({ week, expanded, onToggle }: { week: number; expanded: boolean; onToggle: () => void }) {
+  const { getPlannedLabel } = useApp()
   const articleRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
@@ -178,7 +178,7 @@ export function RestCard({ week, expanded, onToggle }: { week: number; expanded:
         <div className="min-w-0">
           <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--color-muted)]">{restDay.day}</span>
-            <EditableDate workoutId="rest" week={week} />
+            <span className="text-xs font-medium text-[var(--color-gold-dim)]">{getPlannedLabel('rest', week)}</span>
           </div>
           <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold text-[var(--color-muted)]">{restDay.title}</h3>
           <p className="mt-1 text-sm leading-snug text-[var(--color-muted)]/80">{restDay.subtitle}</p>

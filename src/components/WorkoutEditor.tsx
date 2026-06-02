@@ -1,9 +1,11 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { REST_PRESETS } from '../data/defaultPlan'
 import type { PlanWorkout } from '../types/plan'
 import { useApp } from '../context/AppContext'
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock'
+import { useSessions } from '../hooks/useSessions'
 import { formatDuration } from '../utils/formatTime'
+import { WEEKDAYS } from '../utils/sessionDates'
 
 interface WorkoutEditorProps {
   workout: PlanWorkout
@@ -12,8 +14,20 @@ interface WorkoutEditorProps {
 }
 
 export function WorkoutEditor({ workout, week, onClose }: WorkoutEditorProps) {
-  const { updateWorkout, updateExercise, addExercise, removeExercise, moveExercise } = useApp()
+  const { updateWorkout, updateExercise, addExercise, removeExercise, moveExercise, updateFooter } = useApp()
+  const sessions = useSessions()
   const [applyAllWeeks, setApplyAllWeeks] = useState(false)
+
+  // Weeks already logged or skipped: their prescription is history, so an all-weeks apply must not touch them.
+  const lockedWeeks = useMemo(() => {
+    const out: number[] = []
+    for (let w = 1; w <= 12; w++) {
+      const s = sessions.get(workout, w)
+      if (s.logged || s.skipped) out.push(w)
+    }
+    return out
+  }, [sessions, workout])
+  const protectedCount = lockedWeeks.filter((w) => w !== week).length
 
   useBodyScrollLock(true)
 
@@ -50,7 +64,7 @@ export function WorkoutEditor({ workout, week, onClose }: WorkoutEditorProps) {
         <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--color-border)] px-4 py-3 sm:px-5 sm:py-4">
           <div className="min-w-0">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-gold)]">Customize workout</p>
-            <h2 id="workout-editor-title" className="truncate font-[family-name:var(--font-display)] text-xl text-[#f5f3ef]">
+            <h2 id="workout-editor-title" className="truncate font-[family-name:var(--font-display)] text-xl text-[var(--color-heading)]">
               {workout.title}
             </h2>
           </div>
@@ -84,6 +98,28 @@ export function WorkoutEditor({ workout, week, onClose }: WorkoutEditorProps) {
                 className="field-input w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-[var(--color-text)] outline-none focus:border-[var(--color-gold)] focus:ring-2 focus:ring-[var(--color-gold)]/20"
               />
             </label>
+            <div>
+              <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-[var(--color-muted)]">Day</span>
+              <div className="preset-scroll -mx-1 px-1">
+                {WEEKDAYS.map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => updateWorkout(workout.id, { day: d })}
+                    className={`touch-target shrink-0 rounded-xl px-4 py-2.5 text-sm font-medium ${
+                      workout.day === d
+                        ? 'bg-[var(--color-gold)] text-[#0c0c0e]'
+                        : 'border border-[var(--color-border)] text-[var(--color-muted)]'
+                    }`}
+                  >
+                    {d.slice(0, 3)}
+                  </button>
+                ))}
+              </div>
+              <span className="mt-1.5 block text-[11px] text-[var(--color-muted)]">
+                Moves this workout to that weekday across all 12 weeks. Your logged sessions keep their actual dates.
+              </span>
+            </div>
           </div>
 
           <label className="touch-target mb-5 flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-[var(--color-border)] px-4 py-3">
@@ -93,8 +129,14 @@ export function WorkoutEditor({ workout, week, onClose }: WorkoutEditorProps) {
               onChange={(e) => setApplyAllWeeks(e.target.checked)}
               className="h-5 w-5 shrink-0 accent-[var(--color-gold)]"
             />
-            <span className="text-sm leading-snug text-[var(--color-text)]">Apply target changes to all 12 weeks</span>
+            <span className="text-sm leading-snug text-[var(--color-text)]">Apply target & note changes to all 12 weeks</span>
           </label>
+
+          {applyAllWeeks && protectedCount > 0 && (
+            <p className="-mt-3 mb-5 text-xs leading-relaxed text-[var(--color-gold-dim)]">
+              {protectedCount} week{protectedCount === 1 ? '' : 's'} already logged or skipped will be left unchanged.
+            </p>
+          )}
 
           <div className="space-y-4 pb-2">
             {workout.exercises.map((ex, index) => (
@@ -152,6 +194,7 @@ export function WorkoutEditor({ workout, week, onClose }: WorkoutEditorProps) {
                         target: e.target.value,
                         week,
                         allWeeks: applyAllWeeks,
+                        lockedWeeks,
                       })
                     }
                     className="field-input w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 font-mono outline-none focus:border-[var(--color-gold)]"
@@ -188,6 +231,48 @@ export function WorkoutEditor({ workout, week, onClose }: WorkoutEditorProps) {
           >
             + Add exercise
           </button>
+
+          {workout.footers.length > 0 && (
+            <div className="mt-6 space-y-4">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-muted)]">
+                Notes (recovery, goals, finishers)
+              </p>
+              {workout.footers.map((f) => (
+                <div
+                  key={f.id}
+                  className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-raised)]/50 p-4"
+                >
+                  <label className="mb-3 block">
+                    <span className="mb-1 block text-[10px] uppercase tracking-wider text-[var(--color-muted)]">Label</span>
+                    <input
+                      type="text"
+                      value={f.label}
+                      onChange={(e) => updateFooter(workout.id, f.id, { label: e.target.value })}
+                      className="field-input w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 outline-none focus:border-[var(--color-gold)]"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1 block text-[10px] uppercase tracking-wider text-[var(--color-muted)]">
+                      Note · week {week}
+                    </span>
+                    <input
+                      type="text"
+                      value={f.targets[weekIdx] ?? ''}
+                      onChange={(e) =>
+                        updateFooter(workout.id, f.id, {
+                          value: e.target.value,
+                          week,
+                          allWeeks: applyAllWeeks,
+                          lockedWeeks,
+                        })
+                      }
+                      className="field-input w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 outline-none focus:border-[var(--color-gold)]"
+                    />
+                  </label>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="shrink-0 border-t border-[var(--color-border)] p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">

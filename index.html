@@ -15,6 +15,13 @@
       rel="stylesheet"
     />
     <title>Legendary — 12 Week Plan</title>
+    <script>
+      // Apply saved theme before paint to avoid a flash of the wrong theme.
+      try {
+        document.documentElement.dataset.theme =
+          localStorage.getItem('legendary-theme') === 'light' ? 'light' : 'dark'
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <noscript>

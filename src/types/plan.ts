@@ -24,26 +24,15 @@ export interface PlanWorkout {
   footers: PlanFooter[]
 }
 
-export type SessionDateKey =
-  | 'upperStrength'
-  | 'lowerStrength'
-  | 'engineMind'
-  | 'upperHypertrophy'
-  | 'lowerHypertrophy'
-  | 'aerobicRecovery'
-  | 'rest'
-
-export interface WeekDates {
-  week: number
-  dates: Record<SessionDateKey, string>
-}
-
 export interface TrainingPlan {
   version: number
   title: string
   subtitle: string
   workouts: PlanWorkout[]
-  weekDates: WeekDates[]
+  /** ISO YYYY-MM-DD of Week 1's Sunday (Upper Strength). Planned dates derive from this. */
+  startDate: string
+  /** Sparse, cumulative day shifts applied from the given week onward (catch-up). */
+  weekShiftDays?: Record<number, number>
 }
 
 export interface WeekMeta {

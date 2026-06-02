@@ -11,6 +11,20 @@
   --color-border: rgba(201, 169, 98, 0.12);
   --color-muted: #6b6b78;
   --color-text: #e8e6e3;
+  --color-heading: #f5f3ef;
+}
+
+/* Light theme: overrides the color tokens; everything reads them via var(). */
+:root[data-theme='light'] {
+  --color-gold: #9a7b34;
+  --color-gold-dim: #806a3c;
+  --color-surface: #faf8f4;
+  --color-surface-raised: #f1ede5;
+  --color-surface-card: #ffffff;
+  --color-border: rgba(120, 100, 50, 0.2);
+  --color-muted: #6b675f;
+  --color-text: #2a2824;
+  --color-heading: #1a1814;
 }
 
 * {
@@ -30,6 +44,7 @@ body {
   min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 #root {

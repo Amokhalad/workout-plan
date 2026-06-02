@@ -1,21 +1,32 @@
 import { useCallback, useEffect, useState } from 'react'
 import { buildDefaultPlan } from '../data/defaultPlan'
-import { buildDefaultWeekDates } from '../data/defaultWeekDates'
-import type { PlanExercise, PlanFooter, PlanWorkout, SessionDateKey, TrainingPlan } from '../types/plan'
+import type { PlanExercise, PlanFooter, PlanWorkout, TrainingPlan } from '../types/plan'
 import { createId } from '../utils/id'
-import { WORKOUT_SESSION_KEY } from '../utils/sessionDates'
+import { formatDateLabel, plannedDateFor, snapToSunday, weekdayOffset } from '../utils/sessionDates'
+import { restDay } from '../data/workoutPlan'
 
 const STORAGE_KEY = 'legendary-training-plan-v1'
+
+/** Keep shifts to whole weeks and non-negative, so the schedule stays weekday-aligned and never overlaps. */
+function normalizeShifts(shifts?: Record<number, number>): Record<number, number> {
+  const out: Record<number, number> = {}
+  for (const [week, days] of Object.entries(shifts ?? {})) {
+    const weeks = Math.max(0, Math.round(Number(days) / 7))
+    if (weeks > 0) out[Number(week)] = weeks * 7
+  }
+  return out
+}
 
 function hydratePlan(parsed: Partial<TrainingPlan> | null): TrainingPlan {
   const defaults = buildDefaultPlan()
   if (!parsed?.workouts?.length) return defaults
   return {
-    ...defaults,
-    ...parsed,
-    version: 2,
+    version: 3,
+    title: parsed.title ?? defaults.title,
+    subtitle: parsed.subtitle ?? defaults.subtitle,
     workouts: parsed.workouts,
-    weekDates: parsed.weekDates?.length === 12 ? parsed.weekDates : buildDefaultWeekDates(),
+    startDate: snapToSunday(parsed.startDate ?? defaults.startDate),
+    weekShiftDays: normalizeShifts(parsed.weekShiftDays),
   }
 }
 
@@ -64,6 +75,8 @@ export function usePlanConfig() {
         target?: string
         week?: number
         allWeeks?: boolean
+        /** Weeks whose prescription is protected from the all-weeks apply (already logged/skipped). */
+        lockedWeeks?: number[]
       },
     ) => {
       updatePlan((p) => ({
@@ -78,15 +91,19 @@ export function usePlanConfig() {
               if (patch.name !== undefined) next.name = patch.name
               if (patch.restSeconds !== undefined) next.restSeconds = patch.restSeconds
               if (patch.target !== undefined) {
-                const weekIdx = (patch.week ?? 1) - 1
+                const week = patch.week ?? 1
+                const targets = [...ex.targets]
+                while (targets.length < 12) targets.push('')
                 if (patch.allWeeks) {
-                  next.targets = Array(12).fill(patch.target)
+                  const locked = new Set(patch.lockedWeeks ?? [])
+                  for (let w0 = 1; w0 <= 12; w0++) {
+                    // Always write the week being edited; protect already logged/skipped weeks.
+                    if (w0 === week || !locked.has(w0)) targets[w0 - 1] = patch.target
+                  }
                 } else {
-                  const targets = [...ex.targets]
-                  while (targets.length < 12) targets.push('')
-                  targets[weekIdx] = patch.target
-                  next.targets = targets
+                  targets[week - 1] = patch.target
                 }
+                next.targets = targets
               }
               return next
             }),
@@ -141,49 +158,83 @@ export function usePlanConfig() {
     }))
   }, [updatePlan])
 
-  const updateFooter = useCallback((workoutId: string, footerId: string, patch: Partial<PlanFooter> & { value?: string; week?: number }) => {
-    updatePlan((p) => ({
-      ...p,
-      workouts: p.workouts.map((w) => {
-        if (w.id !== workoutId) return w
-        return {
-          ...w,
-          footers: w.footers.map((f) => {
-            if (f.id !== footerId) return f
-            if (patch.value !== undefined && patch.week !== undefined) {
-              const targets = [...f.targets]
-              while (targets.length < 12) targets.push('')
-              targets[patch.week - 1] = patch.value
-              return { ...f, ...patch, targets }
-            }
-            return { ...f, ...patch }
-          }),
-        }
-      }),
-    }))
-  }, [updatePlan])
+  const updateFooter = useCallback(
+    (
+      workoutId: string,
+      footerId: string,
+      patch: { label?: string; value?: string; week?: number; allWeeks?: boolean; lockedWeeks?: number[] },
+    ) => {
+      updatePlan((p) => ({
+        ...p,
+        workouts: p.workouts.map((w) => {
+          if (w.id !== workoutId) return w
+          return {
+            ...w,
+            footers: w.footers.map((f) => {
+              if (f.id !== footerId) return f
+              const next: PlanFooter = { ...f }
+              if (patch.label !== undefined) next.label = patch.label
+              if (patch.value !== undefined) {
+                const week = patch.week ?? 1
+                const targets = [...f.targets]
+                while (targets.length < 12) targets.push('')
+                if (patch.allWeeks) {
+                  const locked = new Set(patch.lockedWeeks ?? [])
+                  for (let w0 = 1; w0 <= 12; w0++) {
+                    if (w0 === week || !locked.has(w0)) targets[w0 - 1] = patch.value
+                  }
+                } else {
+                  targets[week - 1] = patch.value
+                }
+                next.targets = targets
+              }
+              return next
+            }),
+          }
+        }),
+      }))
+    },
+    [updatePlan],
+  )
 
   const setPlanMeta = useCallback((title: string, subtitle: string) => {
     updatePlan((p) => ({ ...p, title, subtitle }))
   }, [updatePlan])
 
-  const getWorkoutDate = useCallback(
-    (workoutId: string, week: number): string => {
-      const sessionKey = WORKOUT_SESSION_KEY[workoutId] ?? 'rest'
-      const weekEntry = plan.weekDates.find((w) => w.week === week) ?? plan.weekDates[week - 1]
-      return weekEntry?.dates[sessionKey] ?? ''
+  const getPlannedDate = useCallback(
+    (workoutId: string, week: number): Date => {
+      const dayName = plan.workouts.find((w) => w.id === workoutId)?.day ?? restDay.day
+      return plannedDateFor(plan.startDate, week, weekdayOffset(dayName), plan.weekShiftDays)
     },
-    [plan.weekDates],
+    [plan.startDate, plan.weekShiftDays, plan.workouts],
   )
 
-  const updateSessionDate = useCallback(
-    (week: number, sessionKey: SessionDateKey, value: string) => {
-      updatePlan((p) => ({
-        ...p,
-        weekDates: p.weekDates.map((w) =>
-          w.week === week ? { ...w, dates: { ...w.dates, [sessionKey]: value } } : w,
-        ),
-      }))
+  const getPlannedLabel = useCallback(
+    (workoutId: string, week: number): string => formatDateLabel(getPlannedDate(workoutId, week)),
+    [getPlannedDate],
+  )
+
+  const setStartDate = useCallback(
+    (iso: string) => {
+      if (iso) updatePlan((p) => ({ ...p, startDate: snapToSunday(iso) }))
+    },
+    [updatePlan],
+  )
+
+  /**
+   * Inserts (or removes) whole rest-weeks before `fromWeek`, pushing that week
+   * and everything after it later. Clamped non-negative so weeks can never
+   * overlap or reorder, and kept to whole weeks so weekdays stay aligned.
+   */
+  const shiftSchedule = useCallback(
+    (fromWeek: number, days: number) => {
+      updatePlan((p) => {
+        const next = { ...(p.weekShiftDays ?? {}) }
+        const value = Math.max(0, (next[fromWeek] ?? 0) + days)
+        if (value === 0) delete next[fromWeek]
+        else next[fromWeek] = value
+        return { ...p, weekShiftDays: next }
+      })
     },
     [updatePlan],
   )
@@ -197,8 +248,10 @@ export function usePlanConfig() {
   return {
     plan,
     getWorkout,
-    getWorkoutDate,
-    updateSessionDate,
+    getPlannedDate,
+    getPlannedLabel,
+    setStartDate,
+    shiftSchedule,
     updateWorkout,
     updateExercise,
     addExercise,

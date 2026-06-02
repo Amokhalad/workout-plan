@@ -7,17 +7,20 @@ interface RestTimerProps {
   restSeconds: number
   accent: string
   onRestChange: (seconds: number) => void
+  /** Bump this number to auto-start the countdown (e.g. when a set is completed). */
+  startSignal?: number
 }
 
 type TimerState = 'idle' | 'running' | 'done'
 
-export function RestTimer({ restSeconds, accent, onRestChange }: RestTimerProps) {
+export function RestTimer({ restSeconds, accent, onRestChange, startSignal }: RestTimerProps) {
   const [state, setState] = useState<TimerState>('idle')
   const [remaining, setRemaining] = useState(restSeconds)
   const [showPresets, setShowPresets] = useState(false)
   const endAtRef = useRef<number | null>(null)
   const rafRef = useRef<number>(0)
   const beepedRef = useRef(false)
+  const lastSignalRef = useRef(startSignal)
 
   useEffect(() => {
     if (state === 'idle') setRemaining(restSeconds)
@@ -62,14 +65,20 @@ export function RestTimer({ restSeconds, accent, onRestChange }: RestTimerProps)
     }
   }, [state, tick, finishTimer])
 
-  const start = () => {
+  const start = useCallback(() => {
     unlockAudio()
     beepedRef.current = false
     endAtRef.current = Date.now() + restSeconds * 1000
     setRemaining(restSeconds)
     setState('running')
     setShowPresets(false)
-  }
+  }, [restSeconds])
+
+  useEffect(() => {
+    if (startSignal === undefined || startSignal === lastSignalRef.current) return
+    lastSignalRef.current = startSignal
+    start()
+  }, [startSignal, start])
 
   const pause = () => {
     cancelAnimationFrame(rafRef.current)
@@ -148,7 +157,7 @@ export function RestTimer({ restSeconds, accent, onRestChange }: RestTimerProps)
                 strokeDashoffset={(2 * Math.PI * 24) * (1 - progress)}
               />
             </svg>
-            <span className="font-mono text-lg font-semibold tabular-nums text-[#f5f3ef] sm:text-base">
+            <span className="font-mono text-lg font-semibold tabular-nums text-[var(--color-heading)] sm:text-base">
               {state === 'done' ? '✓' : formatDuration(display)}
             </span>
           </div>

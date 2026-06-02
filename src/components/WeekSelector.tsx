@@ -18,7 +18,7 @@ export function WeekSelector({ week, onChange }: WeekSelectorProps) {
   return (
     <div className="animate-fade-up">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-        <h2 className="font-[family-name:var(--font-display)] text-2xl font-semibold tracking-tight text-[#f5f3ef] md:text-3xl">
+        <h2 className="font-[family-name:var(--font-display)] text-2xl font-semibold tracking-tight text-[var(--color-heading)] md:text-3xl">
           Week {week}
         </h2>
         <PhaseBadge phase={meta.phase} />

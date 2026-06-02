@@ -24,11 +24,26 @@ export interface PlanWorkout {
   footers: PlanFooter[]
 }
 
+export type SessionDateKey =
+  | 'upperStrength'
+  | 'lowerStrength'
+  | 'engineMind'
+  | 'upperHypertrophy'
+  | 'lowerHypertrophy'
+  | 'aerobicRecovery'
+  | 'rest'
+
+export interface WeekDates {
+  week: number
+  dates: Record<SessionDateKey, string>
+}
+
 export interface TrainingPlan {
   version: number
   title: string
   subtitle: string
   workouts: PlanWorkout[]
+  weekDates: WeekDates[]
 }
 
 export interface WeekMeta {
@@ -37,5 +52,4 @@ export interface WeekMeta {
   goal: string
   intensity: string
   progression: string
-  dates: Record<string, string>
 }

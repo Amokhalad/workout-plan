@@ -183,19 +183,5 @@ export const restDay = {
   day: 'Saturday',
 }
 
-export function getWorkoutDate(workoutId: string, week: number): string {
-  const meta = weekMeta[week - 1]
-  const map: Record<string, keyof WeekMeta['dates']> = {
-    'upper-strength': 'upperStrength',
-    'lower-strength': 'lowerStrength',
-    'engine-mind': 'engineMind',
-    'upper-hypertrophy': 'upperHypertrophy',
-    'lower-hypertrophy': 'lowerHypertrophy',
-    'aerobic-recovery': 'aerobicRecovery',
-    rest: 'rest',
-  }
-  return meta.dates[map[workoutId] ?? 'rest']
-}
-
 export const planTitle = 'Legendary Workout Plan'
 export const planSubtitle = '12 Week Plan: Strong Body, Strong Mind'

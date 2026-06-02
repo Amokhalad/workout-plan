@@ -1,4 +1,3 @@
-import { weekMeta } from '../data/workoutPlan'
 import { useApp } from '../context/AppContext'
 
 const phaseTimeline = [
@@ -10,7 +9,7 @@ const phaseTimeline = [
 ]
 
 export function Overview() {
-  const { plan, resetPlan } = useApp()
+  const { plan, resetPlan, getWorkoutDate } = useApp()
 
   return (
     <section className="animate-fade-up mb-16">
@@ -60,7 +59,7 @@ export function Overview() {
         <h3 className="font-[family-name:var(--font-display)] text-xl text-[#f5f3ef]">{plan.title}</h3>
         <p className="mt-2 text-sm text-[var(--color-muted)]">{plan.subtitle}</p>
         <p className="mt-4 text-xs text-[var(--color-muted)]">
-          {weekMeta[0].dates.upperStrength} → {weekMeta[11].dates.rest}
+          {getWorkoutDate('upper-strength', 1)} → {getWorkoutDate('rest', 12)}
         </p>
         <button
           type="button"

@@ -1,4 +1,5 @@
 import type { PlanExercise, PlanWorkout, TrainingPlan } from '../types/plan'
+import { buildDefaultWeekDates } from './defaultWeekDates'
 import { workouts as templates, planTitle, planSubtitle } from './workoutPlan'
 
 export const REST_PRESETS = [30, 45, 60, 90, 120, 180] as const
@@ -70,10 +71,11 @@ export function buildDefaultPlan(): TrainingPlan {
   }))
 
   return {
-    version: 1,
+    version: 2,
     title: planTitle,
     subtitle: planSubtitle,
     workouts: planWorkouts,
+    weekDates: buildDefaultWeekDates(),
   }
 }
 

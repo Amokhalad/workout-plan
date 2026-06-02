@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { getWorkoutDate, restDay } from '../data/workoutPlan'
+import { restDay } from '../data/workoutPlan'
 import type { PlanWorkout } from '../types/plan'
 import { useApp } from '../context/AppContext'
+import { EditableDate } from './EditableDate'
 import { ExerciseCard } from './ExerciseCard'
 import { WorkoutEditor } from './WorkoutEditor'
 
@@ -16,7 +17,6 @@ export function WorkoutCard({ workout, week, expanded, onToggle }: WorkoutCardPr
   const { completionForWeek } = useApp()
   const [editing, setEditing] = useState(false)
   const articleRef = useRef<HTMLElement>(null)
-  const date = getWorkoutDate(workout.id, week)
   const exerciseIds = workout.exercises.map((e) => e.id)
   const completion = completionForWeek(workout.id, week, exerciseIds)
   const weekIdx = week - 1
@@ -34,7 +34,7 @@ export function WorkoutCard({ workout, week, expanded, onToggle }: WorkoutCardPr
     <>
       <article
         ref={articleRef}
-        className="card-scroll-margin overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-card)]/80 backdrop-blur-md"
+        className="card-scroll-margin rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-card)]/80 backdrop-blur-md"
         style={{ borderLeftColor: workout.accent, borderLeftWidth: 3 }}
       >
         <div className="flex flex-col sm:flex-row sm:items-stretch">
@@ -50,7 +50,7 @@ export function WorkoutCard({ workout, week, expanded, onToggle }: WorkoutCardPr
                   {workout.day}
                 </span>
                 <span className="hidden text-[10px] text-[var(--color-muted)] sm:inline">·</span>
-                <span className="text-xs text-[var(--color-gold-dim)]">{date}</span>
+                <EditableDate workoutId={workout.id} week={week} />
               </div>
               <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold leading-tight text-[#f5f3ef] sm:text-xl">
                 {workout.title}
@@ -154,7 +154,6 @@ function CompletionRing({ percent, color }: { percent: number; color: string }) 
 
 export function RestCard({ week, expanded, onToggle }: { week: number; expanded: boolean; onToggle: () => void }) {
   const articleRef = useRef<HTMLElement>(null)
-  const date = getWorkoutDate('rest', week)
 
   useEffect(() => {
     if (expanded && articleRef.current) {
@@ -179,7 +178,7 @@ export function RestCard({ week, expanded, onToggle }: { week: number; expanded:
         <div className="min-w-0">
           <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--color-muted)]">{restDay.day}</span>
-            <span className="text-xs text-[var(--color-gold-dim)]">{date}</span>
+            <EditableDate workoutId="rest" week={week} />
           </div>
           <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold text-[var(--color-muted)]">{restDay.title}</h3>
           <p className="mt-1 text-sm leading-snug text-[var(--color-muted)]/80">{restDay.subtitle}</p>

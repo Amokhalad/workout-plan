@@ -1,17 +1,29 @@
 import { useCallback, useEffect, useState } from 'react'
 import { buildDefaultPlan } from '../data/defaultPlan'
-import type { PlanExercise, PlanFooter, PlanWorkout, TrainingPlan } from '../types/plan'
+import { buildDefaultWeekDates } from '../data/defaultWeekDates'
+import type { PlanExercise, PlanFooter, PlanWorkout, SessionDateKey, TrainingPlan } from '../types/plan'
 import { createId } from '../utils/id'
+import { WORKOUT_SESSION_KEY } from '../utils/sessionDates'
 
 const STORAGE_KEY = 'legendary-training-plan-v1'
+
+function hydratePlan(parsed: Partial<TrainingPlan> | null): TrainingPlan {
+  const defaults = buildDefaultPlan()
+  if (!parsed?.workouts?.length) return defaults
+  return {
+    ...defaults,
+    ...parsed,
+    version: 2,
+    workouts: parsed.workouts,
+    weekDates: parsed.weekDates?.length === 12 ? parsed.weekDates : buildDefaultWeekDates(),
+  }
+}
 
 function loadPlan(): TrainingPlan {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return buildDefaultPlan()
-    const parsed = JSON.parse(raw) as TrainingPlan
-    if (!parsed?.workouts?.length) return buildDefaultPlan()
-    return parsed
+    return hydratePlan(JSON.parse(raw) as TrainingPlan)
   } catch {
     return buildDefaultPlan()
   }
@@ -155,8 +167,29 @@ export function usePlanConfig() {
     updatePlan((p) => ({ ...p, title, subtitle }))
   }, [updatePlan])
 
+  const getWorkoutDate = useCallback(
+    (workoutId: string, week: number): string => {
+      const sessionKey = WORKOUT_SESSION_KEY[workoutId] ?? 'rest'
+      const weekEntry = plan.weekDates.find((w) => w.week === week) ?? plan.weekDates[week - 1]
+      return weekEntry?.dates[sessionKey] ?? ''
+    },
+    [plan.weekDates],
+  )
+
+  const updateSessionDate = useCallback(
+    (week: number, sessionKey: SessionDateKey, value: string) => {
+      updatePlan((p) => ({
+        ...p,
+        weekDates: p.weekDates.map((w) =>
+          w.week === week ? { ...w, dates: { ...w.dates, [sessionKey]: value } } : w,
+        ),
+      }))
+    },
+    [updatePlan],
+  )
+
   const resetPlan = useCallback(() => {
-    if (window.confirm('Reset all workouts to the original plan? Your customizations will be lost.')) {
+    if (window.confirm('Reset all workouts, dates, and customizations to defaults?')) {
       setPlan(buildDefaultPlan())
     }
   }, [])
@@ -164,6 +197,8 @@ export function usePlanConfig() {
   return {
     plan,
     getWorkout,
+    getWorkoutDate,
+    updateSessionDate,
     updateWorkout,
     updateExercise,
     addExercise,

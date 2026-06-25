@@ -1,6 +1,19 @@
 # Legendary Workout Plan
 
+![License](https://img.shields.io/github/license/Amokhalad/workout-plan)
+![Top language](https://img.shields.io/github/languages/top/Amokhalad/workout-plan)
+![Last commit](https://img.shields.io/github/last-commit/Amokhalad/workout-plan)
+
 Premium web app for your 12-week **Strong Body, Strong Mind** training program (from Google Sheets).
+
+<!-- TODO: add a screenshot or demo GIF of the app -->
+
+## Tech Stack
+
+- **React 19** — UI library
+- **TypeScript** — type-safe components
+- **Vite** — build tool and dev server
+- **Tailwind CSS** — styling
 
 ## Features
 
